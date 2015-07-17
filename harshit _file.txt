@@ -1,1 +1,6 @@
 this is a test file created by freak005 for the testing stash
+
+
+
+
+I'm creating a new branch named test-plugin. 
