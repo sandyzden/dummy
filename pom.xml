@@ -1,0 +1,338 @@
+<?xml version="1.0"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  
+   
+  <modelVersion>4.0.0</modelVersion>
+  <groupId><<GROUP>></groupId>
+  <artifactId><<ArtifactID>></artifactId>
+  <name><<Project Name>></name>
+  <url><<Project URL used for site phase>></url>
+ 
+
+  <!--Artifact packaging spec WAR/JAR-->
+  <packaging>war</packaging>
+
+  <!--Describe your versiioning strategy -->
+ <version>${FileVersionPrefix}.${env.BUILD_NUMBER}.${env.SVN_REVISION}</version>
+ 
+  
+  <!--Properties to enable/disable testing -->
+  <properties>
+    <skipTests>true</skipTests>
+	<cobertura.skip>false</cobertura.skip>	
+	<skipTagging>false</skipTagging>
+	<FileVersionPrefix>1.0</FileVersionPrefix>	
+	<ProjectName><<Project Name>></ProjectName>
+  </properties>
+  
+  <!--SCM connectiion details for tagging -->
+  <scm>
+    <url>scm:svn:${env.SVN_URL}/</url>
+	<connection>scm:svn:${env.SVN_URL}/</connection> 	
+  </scm>
+
+   <!--Build Multi-module projects-->
+  <modules>
+   	<module><<Module1>></module>
+	<module><<Module2>></module>
+  </modules>
+ 
+ 
+ 
+  
+<!--========================================-->
+<!--Main entry point for project life-cycle -->
+  <build>  
+
+    <plugins>
+
+ <!--Custom task during compilation phase -->    
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-antrun-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>compile</id>
+            <phase>compile</phase>
+            <configuration>
+              <tasks>
+                 <!--Any custom task need to be done during compilation phase -->
+              </tasks>
+            </configuration>
+            <goals>
+              <goal>run</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+
+
+ <!--Custom task to version and do regex of tag variable-->
+
+  <plugin>
+    <groupId>org.apache.maven.plugins</groupId>
+    <artifactId>maven-antrun-plugin</artifactId>
+    <version>1.7</version>
+      <executions>
+          <execution>
+                 <phase>validate</phase>
+                    <goals>
+                          <goal>run</goal>
+                     </goals>
+                      <configuration>	
+					    <exportAntProperties>true</exportAntProperties>
+                             <tasks>
+								 <taskdef resource="net/sf/antcontrib/antcontrib.properties" classpathref="maven.runtime.classpath" />
+								 <echo message="Creating Version Info"/>
+	
+										<property name="BUILDLABEL" value="${env.BUILD_NUMBER}"/>
+										 <if>
+											<!--<isset property="BUILD_NUMBER"/>	-->
+											<equals arg1="${BUILDLABEL}" arg2="$${env.BUILD_NUMBER}"/>
+											 <then>
+												<property name="FileVersion" value="${FileVersionPrefix}.0.0"/>
+											 </then>
+											 <else>
+											  <property name="FileVersion" value="${FileVersionPrefix}.${BUILDLABEL}.${env.SVN_REVISION}"/>											
+											</else>
+										 </if>
+										 <echo message="Current Version is ${FileVersion}"/>
+                                </tasks>
+                            </configuration>
+                        </execution>
+                    </executions>                   
+                </plugin>
+
+     
+    <!--Enable this plugin to have unit test executed -->  
+	<plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <version>2.16</version>
+        <configuration>
+          <skipTests>${skipTests}</skipTests>
+		  <!--In case if any test file need to be excluded -->
+		   <excludes>
+            <exclude>org/**/*.java</exclude>
+          </excludes>
+        </configuration>
+      </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>2.0.2</version>
+        <configuration>
+          <source>1.6</source>
+          <target>1.6</target>
+          <encoding>ISO-8859-1</encoding>
+        </configuration>
+      </plugin>
+
+      <!-- PMD CPD plugin -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-pmd-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>check-pmd</id>
+            <phase>verify</phase>
+          <goals>
+            <goal>check</goal>
+            <goal>cpd-check</goal>
+          </goals>
+        </execution>
+      </executions>
+      <configuration>
+        <linkXref>false</linkXref>
+        <targetJdk>1.6</targetJdk>
+        <format>xml</format>
+        <outputDirectory>target/pmd-cpd/</outputDirectory>
+      </configuration>
+    </plugin>
+    <!-- PMD CPD plugin ends here -->
+
+	<!-- Plugin to create Artifact WAR file with version updated in manifest file -->
+    <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-war-plugin</artifactId>
+        <version>2.4</version>
+        <configuration>  
+		  <webappDirectory><<WEB Directory>></webappDirectory>
+		  <warName><<WAR-NAME>></warName>
+		  <webXml><<Path to WEB.xml file>></webXml>
+		  <archive>
+			<manifestEntries>
+                 <VersionBuilt>${project.version}</VersionBuilt>
+				 <Built-By>Production Engineering</Built-By>
+			</manifestEntries>
+         </archive> 
+        </configuration>
+     </plugin>
+
+	 <!--Custom task post build action -->    
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-antrun-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>default-cli</id>
+            <phase>install</phase>
+            <configuration>
+			 <target>
+             		
+				 <taskdef resource="net/sf/antcontrib/antcontrib.properties" classpathref="maven.runtime.classpath" />	
+				
+				 <property name="BUILDLABELX" value="${env.BUILD_NUMBER}"/>
+					<if>
+					<equals arg1="${BUILDLABELX}" arg2="$${env.BUILD_NUMBER}"/>
+						<then>
+							<echo message="This task should only be run on build server"/>
+						 </then>
+						 <else>
+						<typedef name="ftp" classname="org.apache.tools.ant.taskdefs.optional.net.FTP" classpathref="maven.runtime.classpath"/>
+						<ftp server="10.242.247.4"
+								userid="anonymous"	
+								password="TF-TFPE-Mgmt@thomsonreuters.com"
+								passive="yes"
+								remotedir="${ProjectName}/${ProjectName}.${FileVersionPrefix}">       
+								<fileset dir="target" includes="**/*.war" />	
+						</ftp>	
+<echo message="copying ${dist.dir}/Release/${ProjectName}.${FileVersion}.war to fendahl.pe.int.thomsonreuters.com/builddistribution/${ProjectName}/${ProjectName}.${FileVersionPrefix}/ "/>
+						<!--Use below only on linux server-->
+						<exec executable="sudo">
+							<arg value="-u"/> 
+							<arg value="pesubversion"/> 
+							<arg value="svn"/> 
+							<arg value="copy"/>
+							<arg value="${ScmPathSource}"/>
+							<arg value="${ScmPathDestination}"/>
+							<arg value="-m"/>
+							<arg value="Tagged by CI"/>    
+						</exec>	
+						<!--Use below module if run on windows node-->
+						<exec executable="svn">		
+							<arg value="copy"/>
+							<arg value="${ScmPathSource}"/>
+							<arg value="${ScmPathDestination}"/>
+							<arg value="-m"/>
+							<arg value="Tagged by CI"/>    
+						</exec>
+						</else>
+					 </if>
+			
+			 </target>
+            </configuration>
+            <goals>
+              <goal>run</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+
+   <!--Below plugin to run checkstyle -->
+   <plugin>
+   <groupId>org.apache.maven.plugins</groupId>
+   <artifactId>maven-checkstyle-plugin</artifactId>
+   <version>2.11</version>
+   <executions>
+     <execution>
+       <id>validate</id>
+       <phase>package</phase>
+			<configuration>				
+				<encoding>UTF-8</encoding>
+				<consoleOutput>false</consoleOutput>				
+				<linkXRef>true</linkXRef>
+				<failOnViolation>false</failOnViolation>
+			 </configuration>
+       <goals>
+         <goal>check</goal>
+       </goals>
+     </execution>
+   </executions>
+ </plugin>
+
+  </plugins>
+
+
+</build>
+
+<!--========================================-->
+<!-- List here all our maven remote repository entries -->
+<distributionManagement> 
+   <!--Use below entry if output is published to FTP server/release mode repository -->
+   <repository>
+      <id>ftp-repository</id>
+      <url>ftp://10.242.247.4/<<PROJECTNAME>>/<<PROJECTLOCATION>></url>	
+    </repository>  
+	<!--Use below entry to publish to Snapshot mode repository-->
+	  <snapshotRepository>
+      <id>nexusSS</id>
+      <name>Nexus Snapshot Repository</name>
+      <url><<SANPSHOT REPO URL>></url>
+    </snapshotRepository>
+</distributionManagement>
+
+<!--if project use multiple repository url for reference use below modules (note this will not push the artifacts -->
+<repositories>
+   <repository>
+	  <id>production_pe_repository</id>
+		<name>Maven Internal Repository</name>
+		<url><<MAVEN REPO URL>></url>
+		<snapshots>
+		     <!--set true if reference is snapshot repo, false for release repo -->
+			<enabled>false</enabled>
+		</snapshots>
+   </repository>  
+ </repositories>
+
+
+<!--========================================-->
+<!--List all your dependencies here -->
+<dependencies>
+ <!--If JUnit Test framework need for this project -->
+  <dependency>
+    <groupId>junit</groupId>
+    <artifactId>junit</artifactId>
+    <version>3.8.1</version>
+    <scope>test</scope>
+  </dependency>  
+  <dependency>
+    <groupId>javax.servlet</groupId>
+    <artifactId>servlet-api</artifactId>
+    <type>jar</type>
+    <version>2.4</version>
+    <scope>compile</scope>
+  </dependency>
+  <dependency>  
+  
+  <!--Dependency for build distribution and tagging -->
+  <dependency>
+    <groupId>ant-contrib</groupId>
+    <artifactId>ant-contrib</artifactId>
+    <version>1.0b3</version>
+    <exclusions>
+      <exclusion>
+        <groupId>ant</groupId>
+        <artifactId>ant</artifactId>
+      </exclusion>
+    </exclusions>
+  </dependency>
+  <dependency>
+    <groupId>org.apache.ant</groupId>
+    <artifactId>ant-nodeps</artifactId>
+    <version>1.8.1</version>
+  </dependency>
+   <dependency>
+    <groupId>ant</groupId>
+    <artifactId>ant-commons-net</artifactId>
+    <version>1.6.5</version>
+  </dependency>
+  <dependency>
+   <groupId>commons-net</groupId>
+   <artifactId>commons-net</artifactId>
+   <version>1.4.1</version>
+  </dependency>  
+</dependencies>
+</project>
