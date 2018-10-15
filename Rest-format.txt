@@ -1,0 +1,33 @@
+{
+  "components": [
+    {
+      "iis-website": [
+        {
+          "websitename": "Default web Browser",
+          "physicalpath": "C:\\inetpub",
+          "identity": "IIS_USR"
+        },
+        {
+          "websitename": "Custom web browser",
+          "physicalpath": "C:\\inetpub1",
+          "identity": "IIS_USR"
+        }
+      ],
+      "iis-webvdir": {
+        "virtualdir": "TestVdir",
+        "physicalpath": "C:\\inetpub\\wwwroot"
+      },
+      "iis-webappool": {
+        "appoolname": "TestAppPool",
+        "identity": "IIS_USR",
+        "netruntime": "4.0"
+      },
+      "win-service": {
+        "servicename": "TestService",
+        "identity": "LocalSystem",
+        "physicalpath": "C:\\WinTest\\Service.exe",
+        "startype": "auto"
+      }
+    }
+  ]
+}
